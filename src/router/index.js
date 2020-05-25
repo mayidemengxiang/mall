@@ -42,14 +42,8 @@ const router = new VueRouter({
   routes,
   mode:'history'
 });
-// router.beforeEach((to, from, next) => {
-//   document.title= to.matched[0].meta.title;
-//   next();
-// })
 
 router.afterEach((to, from) => {
-  console.log(to);
-  console.log(from);
    document.title= to.matched[0].meta.title;
 })
 
