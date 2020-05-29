@@ -13,6 +13,9 @@
 </script>
 
 <style scoped>
+  .feature {
+    border-bottom: #eee solid 10px;
+  }
   .feature img {
     width: 100%;
   }
