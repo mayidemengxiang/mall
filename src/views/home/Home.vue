@@ -3,28 +3,18 @@
     <navbar class="home-nav">
       <div slot="center">购物街</div>
     </navbar>
+    <tab-control ref="tabControl1" v-show="isTabControl" class="fixed" :titles="['流行','新款','精选']" :class="{fixed:isTabControl}" @tabControlClick="tabControlClick"></tab-control>
     <scroll class="content" ref="scroll" :pullUpLoad="true" :probeType="3" @pullingUp="LoadMore" @scroll="contentScroll">
       <home-swiper :banners="banners" @swiperImgLoaded="swiperImgLoaded"></home-swiper>
       <home-recommends :recommends="recommends"></home-recommends>
       <feature-view></feature-view>
-      <tab-control ref="tabControl" :titles="['流行','新款','精选']" :class="{fixed:isTabControl}" @tabControlClick="tabControlClick"></tab-control>
+      <tab-control ref="tabControl2" :titles="['流行','新款','精选']" @tabControlClick="tabControlClick"></tab-control>
       <!--<tab-control ref="tabControl" :titles="['流行','新款','精选']" :class="{'fixed':isTabControl}" @tabControlClick="tabControlClick"></tab-control>-->
       <goods-list :goods="showGoods"></goods-list>
     </scroll>
     <div>
       <back-top @click.native="backTop" v-show="isShowBackTop"></back-top>
-      <div>
-
-      </div>
     </div>
-
-    <!--<home-swiper :banners="banners"></home-swiper>-->
-    <!--<home-recommends :recommends="recommends"></home-recommends>-->
-    <!--<feature-view></feature-view>-->
-    <!--<tab-control class="tab-control" :titles="['流行','新款','精选']" @tabControlClick="tabControlClick"></tab-control>-->
-    <!--<goods-list :goods="showGoods"></goods-list>-->
-
-
   </div>
 </template>
 
@@ -42,15 +32,19 @@
   import {getHomeMultidata,getHomeGoods} from "network/home";
   import {debounce} from "common/utils";
 
-
   export default {
     name: "home",
     data(){
       return {
         currentType:'pop',      //当前商品类型
         isShowBackTop:false,   //是否显示回到顶部的按钮
-        tabOffsetTop:0,  //tabControl组件的 偏移量
+        tabOffsetTop:0,        //tabControl组件的 偏移量
         isTabControl:false,   //tabcontrol是否吸顶
+        saveY:{
+          'pop':0,
+          'new':0,
+          'sell':0
+        },               //离开时的Y的位置
         banners:[],
         recommends:[],
         goods:{
@@ -79,11 +73,20 @@
       this.getGoods('new');
       this.getGoods('sell');
     },
+    activated(){
+      this.$refs.scroll.refresh();
+      this.$refs.scroll.scrollTo(0,this.saveY[this.currentType],0);
+    },
+    // deactivated(){
+    //   this.saveY[this.currentType] = this.$refs.scroll.getScrollY();
+    // },
     mounted(){
-      const refresh = debounce(this.$refs.scroll.refresh,200);
-      this.$bus.$on('itemImageLoad',()=>{
-        refresh();
-      });
+      if(this.$route.name === 'home'){
+        const refresh = debounce(this.$refs.scroll.refresh,100);
+        this.$bus.$on('itemImageLoad',()=>{
+          refresh();
+        });
+      }
 
     },
     computed:{
@@ -96,6 +99,9 @@
       * 实例方法
       * */
       tabControlClick(index){
+        //记录之前的商品类型的位置
+        this.saveY[this.currentType] = this.$refs.scroll.getScrollY();
+        //根据Index更改当前的商品类型
         switch (index) {
           case 0 :
             this.currentType = 'pop';
@@ -106,6 +112,9 @@
           case 2 :
             this.currentType = 'sell';
         }
+        this.$refs.scroll.scrollTo(0,this.saveY[this.currentType],0);
+        this.$refs.tabControl1.currentIndex = index;
+        this.$refs.tabControl2.currentIndex = index;
       },
       backTop(){
         this.$refs.scroll.scrollTo(0,0,500);
@@ -113,22 +122,21 @@
       contentScroll(position){
         this.isShowBackTop = -position.y >= 1000;
 
-        console.log(-position.y);
         this.isTabControl = (-position.y) >= this.tabOffsetTop;
+
+        if(this.isTabControl === false && this.$route.name === 'home'){
+          this.saveY.pop = this.$refs.scroll.getScrollY()<= -this.tabOffsetTop ? -this.tabOffsetTop : this.$refs.scroll.getScrollY();
+          this.saveY.new = this.$refs.scroll.getScrollY()<= -this.tabOffsetTop ? -this.tabOffsetTop : this.$refs.scroll.getScrollY();
+          this.saveY.sell = this.$refs.scroll.getScrollY()<= -this.tabOffsetTop ? -this.tabOffsetTop : this.$refs.scroll.getScrollY();
+        }else{
+          this.saveY[this.currentType] = this.$refs.scroll.getScrollY();
+        }
       },
       swiperImgLoaded(){
-        this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop;
+        this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop;
       },
       //上拉加载更多
       LoadMore(){
-        //解决better-scroll的重新计算的bug
-        // new Promise((resolve,reject)=>{
-        //   this.getGoods(this.currentType);
-        //   resolve();
-        // }).then(res=>{
-        //   this.$refs.scroll.finishPullUp();
-        //   this.$refs.scroll.refresh();
-        // });
         this.getGoods(this.currentType);
       },
       /*
@@ -162,10 +170,6 @@
   .home-nav {
     background-color: var(--color-tint);
     color: white;
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
     z-index: 10;
   }
 
@@ -175,17 +179,13 @@
     /*z-index: 9;*/
   /*}*/
   .fixed {
-    position: fixed;
-    /*position: sticky;*/
-    left: 0;
-    right: 0;
-    top: 44px;
+    position: relative;
     z-index: 9;
   }
 
   .content {
     position: absolute;
-    /*overflow: hidden;*/
+    overflow: hidden;
     top: 44px;
     bottom: 49px;
     left: 0;

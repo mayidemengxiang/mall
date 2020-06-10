@@ -10,6 +10,7 @@ const routes =[
   },
   {
     path:'/home',
+    name:'home',
     component:()=>import('../views/home/Home.vue'),
     meta:{
       title:'首页'
@@ -17,6 +18,7 @@ const routes =[
   },
   {
     path:'/category',
+    name:'category',
     component:()=>import('../views/category/Category.vue'),
     meta:{
       title:'分类'
@@ -24,6 +26,7 @@ const routes =[
   },
   {
     path:'/shopcart',
+    name:'shopcart',
     component:()=>import('../views/shopcart/Shopcart.vue'),
     meta:{
       title:'购物车'
@@ -31,9 +34,18 @@ const routes =[
   },
   {
     path:'/profile',
+    name:'profile',
     component:()=>import('../views/profile/Profile.vue'),
     meta:{
       title:'我的'
+    }
+  },
+  {
+    path:'/detail/:iid',
+    name:'detail',
+    component:()=>import('../views/detail/Detail.vue'),
+    meta:{
+      title:'详情'
     }
   }
 ];

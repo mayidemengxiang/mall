@@ -35,6 +35,9 @@
       },
       refresh(){
         this.btScroll && this.btScroll.refresh();
+      },
+      getScrollY(){
+        return this.btScroll ? this.btScroll.y : 0;
       }
     },
     mounted(){
